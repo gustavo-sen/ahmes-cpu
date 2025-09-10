@@ -25,11 +25,12 @@ constant DLD  : unsigned(3 DOWNTO 0):="0111";
 constant DAE  : unsigned(3 DOWNTO 0):="1000";
 constant DAD  : unsigned(3 DOWNTO 0):="1001";
 
-BEGIN
+begin
 	process (operA, operB, operacao,result,Cin)
 	variable temp : unsigned(8 DOWNTO 0);
 	begin
 		case operacao is
+		
 		when ADIC =>
 			temp := ('0'&operA) + ('0'&operB);
 			result <= temp(7 DOWNTO 0);
@@ -40,6 +41,7 @@ BEGIN
 				end if;
 			else V <= '0';
 			end if;
+		
 		when SUB =>
 			temp := ('0'&operA) - ('0'&operB);
 			result <= temp(7 DOWNTO 0);
@@ -50,12 +52,17 @@ BEGIN
 				end if;
 			else V <= '0';
 			end if;
+		
 		when OU =>
 			result <= operA or operB;
+		
 		when E =>
 			result <= operA and operB;
+		
 		when NAO =>
 			result <= not operA;
+		
+		--shift aritimetico para esquerda
 		when DLE =>
 			C <= operA(7);
 			result(7) <= operA(6);
@@ -66,6 +73,8 @@ BEGIN
 			result(2) <= operA(1);
 			result(1) <= operA(0);
 			result(0) <= Cin;
+		
+		-- shift aritimetico para esquerda
 		when DAE =>
 			C <= operA(7);
 			result(7) <= operA(6);
@@ -76,6 +85,8 @@ BEGIN
 			result(2) <= operA(1);
 			result(1) <= operA(0);
 			result(0) <= '0';
+		
+		-- shift logico para direita
 		when DLD =>
 			C <= operA(0);
 			result(0) <= operA(1);
@@ -86,6 +97,8 @@ BEGIN
 			result(5) <= operA(6);
 			result(6) <= operA(7);
 			result(7) <= Cin;
+		
+		-- shift aritimetico para direita
 		when DAD =>
 			C <= operA(0);
 			result(0) <= operA(1);
@@ -96,6 +109,7 @@ BEGIN
 			result(5) <= operA(6);
 			result(6) <= operA(7);
 			result(7) <= '0';		
+		
 		when others =>
 			result <= (others =>'0');
 			Z <= '0';
@@ -104,9 +118,12 @@ BEGIN
 			V <= '0';
 			B <= '0';
 		end case;
+		
+		-- when result is zero, FLAG Z = 1
 		if (result = 0) then 
 			Z <= '1'; else Z <= '0';
 		end if;
+		
 		N <= result(7);
 	end process;
 
