@@ -2,6 +2,8 @@
 
 ## Sobre
 
+## Especificações do projeto
+
 ## Simulation
  - pre-requisitos:
    - instalar ghdl
