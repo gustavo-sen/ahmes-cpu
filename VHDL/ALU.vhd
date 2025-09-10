@@ -24,6 +24,7 @@ constant DLE  : unsigned(3 DOWNTO 0):="0110";
 constant DLD  : unsigned(3 DOWNTO 0):="0111";
 constant DAE  : unsigned(3 DOWNTO 0):="1000";
 constant DAD  : unsigned(3 DOWNTO 0):="1001";
+constant X_OR  : unsigned(3 DOWNTO 0):="1010";
 
 begin
 	process (operA, operB, operacao,result,Cin)
@@ -108,7 +109,10 @@ begin
 			result(4) <= operA(5);
 			result(5) <= operA(6);
 			result(6) <= operA(7);
-			result(7) <= '0';		
+			result(7) <= '0';	
+
+		when X_OR =>
+			result <= operA xor operB;
 		
 		when others =>
 			result <= (others =>'0');
