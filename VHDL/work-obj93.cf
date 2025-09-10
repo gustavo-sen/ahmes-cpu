@@ -1,0 +1,7 @@
+v 4
+file . "tb_alu.vhd" "a545edf84b5fd65aee6b5c572d2b45d3f3c17df4" "20250910144907.195":
+  entity tb_alu at 1( 0) + 0 on 65;
+  architecture test of tb_alu at 8( 100) + 0 on 66;
+file . "ALU.vhd" "c47315e458ca95921570bf64f9c45909555f3729" "20250910144904.999":
+  entity alu at 1( 0) + 0 on 63;
+  architecture alu of alu at 18( 376) + 0 on 64;

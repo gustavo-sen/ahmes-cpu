@@ -2,6 +2,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
+-- GHDL 2008 directive
+-- pragma GHDL : vhdl_version 2008
+
 entity tb_alu is
 end tb_alu;
 
