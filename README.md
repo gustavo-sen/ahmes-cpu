@@ -23,7 +23,7 @@ Gerar arquivos de simulação
 ### Simular com GtkWave
 Para usar o GtkWave e visualizar os sinais:
 gera um arquivo com um tempo de simulação 
-> ghdl -r tb_enitty --stop-time=100ms --vcd=wave.vcd
+> ghdl -r tb_enitty --stop-time=100ms --vcd=nome_da_simulacao.vcd
 executa o arquivo gerado
-> > gtkwave wave.vcd
+> > gtkwave nome_da_simulacao.vcd
 
