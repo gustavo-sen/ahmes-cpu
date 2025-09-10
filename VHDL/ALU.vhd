@@ -8,23 +8,26 @@ entity ALU is
 		operacao 	: IN unsigned (3 DOWNTO 0);
 		operA		: IN unsigned(7 DOWNTO 0);
 		operB		: IN unsigned(7 DOWNTO 0);
-		Result		: buffer unsigned(7 DOWNTO 0);
-		Cin			: IN STD_LOGIC; 			-- Carry in
-		N,Z,C,B,V 	: buffer STD_LOGIC		
+		Result		: buffer unsigned(7 DOWNTO 0);	
+		Cin			: IN STD_LOGIC; 				-- Carry in
+		-- negative , zero, carry, borrow, overflow
+		N,Z,C,B,V 	: buffer STD_LOGIC			
 	);
 end ALU;
 
 architecture alu of ALU is
-constant ADIC : unsigned(3 DOWNTO 0):="0001";
-constant SUB  : unsigned(3 DOWNTO 0):="0010";
-constant OU   : unsigned(3 DOWNTO 0):="0011";
-constant E    : unsigned(3 DOWNTO 0):="0100";
-constant NAO  : unsigned(3 DOWNTO 0):="0101";
-constant DLE  : unsigned(3 DOWNTO 0):="0110";
-constant DLD  : unsigned(3 DOWNTO 0):="0111";
-constant DAE  : unsigned(3 DOWNTO 0):="1000";
-constant DAD  : unsigned(3 DOWNTO 0):="1001";
-constant X_OR  : unsigned(3 DOWNTO 0):="1010";
+
+-- opcodes
+constant ADIC : unsigned(3 DOWNTO 0) 	:= "0001";
+constant SUB  : unsigned(3 DOWNTO 0) 	:= "0010";
+constant OU   : unsigned(3 DOWNTO 0) 	:= "0011";
+constant E    : unsigned(3 DOWNTO 0) 	:= "0100";
+constant NAO  : unsigned(3 DOWNTO 0) 	:= "0101";
+constant XOU  : unsigned(3 DOWNTO 0)	:= "0110";
+constant DLE  : unsigned(3 DOWNTO 0) 	:= "0111";
+constant DLD  : unsigned(3 DOWNTO 0) 	:= "1000";
+constant DAE  : unsigned(3 DOWNTO 0) 	:= "1001";
+constant DAD  : unsigned(3 DOWNTO 0) 	:= "1010";
 
 begin
 	process (operA, operB, operacao,result,Cin)
@@ -63,6 +66,9 @@ begin
 		when NAO =>
 			result <= not operA;
 		
+		when XOU =>
+			result <= operA xor operB;
+
 		--shift aritimetico para esquerda
 		when DLE =>
 			C <= operA(7);
@@ -111,8 +117,6 @@ begin
 			result(6) <= operA(7);
 			result(7) <= '0';	
 
-		when X_OR =>
-			result <= operA xor operB;
 		
 		when others =>
 			result <= (others =>'0');
