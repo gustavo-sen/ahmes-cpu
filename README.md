@@ -5,9 +5,13 @@
 ## Especificações do projeto
 
 ## Simulation
- - pre-requisitos:
+ - pre-requisitos VHDL:
    - instalar ghdl
    - intalar gtk wave
+ 
+ - pre-requisitos SystemVerilog:
+   - instalar icarus
+   - instalar gtk wave
 
 ### Simular no terminal p/ SystemVerilog
 
