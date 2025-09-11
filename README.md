@@ -9,7 +9,15 @@
    - instalar ghdl
    - intalar gtk wave
 
-### Simular no terminal
+### Simular no terminal p/ SystemVerilog
+
+Sintetizar com icuarus
+>iverilog -g2012 -o name_sim module_name.sv tb_module_name.sv
+
+Simular tesbench
+>vvp name_sim
+
+### Simular no terminal p/ VHDL
 Sintetizar entidade desejada
 > ghdl -a entity_name.vhd
 
