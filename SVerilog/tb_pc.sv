@@ -1,8 +1,8 @@
 module tb_pc;
-
     logic clk, reset, load, inc;
     logic [7:0] pc_in;
     logic [7:0] pc_out;
+    logic fail_count = 0;
 
     // Instância do DUT
     PC uut (
@@ -27,7 +27,7 @@ module tb_pc;
         reset = 0;
         inc = 1;
         #10
-        
+
         @(posedge clk);
         test(8'd1);
 
@@ -57,16 +57,18 @@ module tb_pc;
 
         inc = 0;
 
-        $display("== End Simulation ==.");
+        $display("== End Simulation ==");
+        $display("\nTotal Fail: %d", fail_count);
         $finish;
     end
 
     // Tarefa para verificar o valor do PC
     task test(input logic [7:0] expected);
-        if (pc_out === expected)
+        if (pc_out === expected) begin
             $display("TEST PASS | Time=%0t | PC=%h | Esperado=%h", $time, pc_out, expected);
-        else
+        end else begin
             $display("TEST FAIL | Time=%0t | PC=%h | Esperado=%h", $time, pc_out, expected);
+            fail_count++;
+        end
     endtask
-
 endmodule
