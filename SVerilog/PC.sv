@@ -1,4 +1,4 @@
-module program_counter (
+module PC (
     input  logic        clk,
     input  logic        reset,
     input  logic        load,    // carrega valor de operação em pc_in
