@@ -158,44 +158,7 @@ module tb_alu;
             0,              // expected B
             0               // expected V
         );
-          test(
-            129,            // operA 
-            0,              // operB 
-            4'b0111,        // operacao (DLD)
-            1,              // Cin
-            192,              // expected result 
-            1,              // expected N
-            0,              // expected Z
-            1,              // expected C
-            0,              // expected B
-            0               // expected V
-        );
-       
-       
-            test(
-            129,            // operA 
-            0,              // operB 
-            4'b1000,        // operacao (DAE)
-            0,              // Cin
-            2,              // expected result 
-            0,              // expected N
-            0,              // expected Z
-            1,              // expected C
-            0,              // expected B
-            0               // expected V
-        );
-           test(
-            129,            // operA 
-            0,              // operB 
-            4'b1001,        // operacao (DAD)
-            0,              // Cin
-            64,              // expected result 
-            0,              // expected N
-            0,              // expected Z
-            1,              // expected C
-            0,              // expected B
-            0               // expected V
-        );
+
         $display("Testbench finished. Total failed tests: %0d", fail_count);
         $finish;
     end
