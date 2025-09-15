@@ -1,63 +1,62 @@
 module ALU (
-    input  [3:0] operacao,
-    input  [7:0] operA,
-    input  [7:0] operB,
-    input        Cin,
-    output reg [7:0] result,
-    output reg N,
-    output reg Z,
-    output reg C,
-    output reg B,
-    output reg V
+    // input
+    input  logic [3:0] operacao, 
+    input  logic [7:0] operA,    
+    input  logic [7:0] operB,    
+    input  logic       Cin,      // Carry in
+
+    //output
+    output logic [7:0] result,   
+    output logic       N,        // (Negative flag)
+    output logic       Z,        // (Zero flag)
+    output logic       C,        // (Carry flag)
+    output logic       B,        // (Borrow flag)
+    output logic       V         // (Overflow flag)
 );
 
-    // Definição dos códigos das operações
+    // Opcodes
     localparam ADIC = 4'b0001;
-    localparam SUB  = 4'b0010;
-    localparam OU   = 4'b0011;
-    localparam E    = 4'b0100;
-    localparam NAO  = 4'b0101;
-    localparam DLE  = 4'b0110;
-    localparam DLD  = 4'b0111;
-    localparam DAE  = 4'b1000;
-    localparam DAD  = 4'b1001;
-
-    reg [8:0] temp;
+    localparam SUB  = 4'b0010; 
+    localparam OU   = 4'b0011; 
+    localparam E    = 4'b0100; 
+    localparam NAO  = 4'b0101; 
+    localparam XOU  = 4'b0110; 
+    localparam DLE  = 4'b0111; // Rotação para Esquerda (Rotate Left)
+    localparam DLD  = 4'b1000; // Rotação para Direita (Rotate Right)
+    localparam DAE  = 4'b1001; // Deslocamento Aritmético para Esquerda (Shift Arith. Left)
+    localparam DAD  = 4'b1010; // Deslocamento Lógico para Direita (Shift Logical Right)
 
     always @(*) begin
-        // Defaults
-        result = 8'b0;
-        N = 0;
-        Z = 0;
-        C = 0;
-        B = 0;
-        V = 0;
-        temp = 9'b0;
+        logic [8:0] temp;
+
+        result = 8'h00;
+        N = 1'b0;
+        Z = 1'b0;
+        C = 1'b0;
+        B = 1'b0;
+        V = 1'b0;
 
         case (operacao)
             ADIC: begin
                 temp = {1'b0, operA} + {1'b0, operB};
                 result = temp[7:0];
                 C = temp[8];
-                if ((operA[7] == operB[7]) && (operA[7] != result[7]))
-                    V = 1;
-                else
-                    V = 0;
+                V = (operA[7] == operB[7]) && (operA[7] != result[7]);
+                B = 1'b0;
             end
 
             SUB: begin
                 temp = {1'b0, operA} - {1'b0, operB};
                 result = temp[7:0];
                 B = temp[8];
-                if ((operA[7] != operB[7]) && (operA[7] != result[7]))
-                    V = 1;
-                else
-                    V = 0;
+                V = (operA[7] != operB[7]) && (operA[7] != result[7]);
+                C = 1'b0;
             end
 
-            OU:    result = operA | operB;
-            E:     result = operA & operB;
-            NAO:   result = ~operA;
+            OU:     begin result = operA | operB; end
+            E:      begin result = operA & operB; end
+            NAO:    begin result = ~operA; end
+            XOU:    begin result = operA ^ operB; end
 
             DLE: begin
                 C = operA[7];
@@ -89,7 +88,7 @@ module ALU (
             end
         endcase
 
-        // Flags comuns
+          // Flags comuns
         if (result == 8'b0)
             Z = 1;
         else
