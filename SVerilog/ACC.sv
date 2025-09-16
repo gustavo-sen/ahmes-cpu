@@ -1,10 +1,10 @@
 module accumulator (
-    input logic         clk,       // Sinal de clock (Clock signal)
-    input logic         reset,     // Reset síncrono, ativo em alto (Synchronous active-high reset)
-    input logic         load_ac,   // Habilita a carga de um novo dado (Enable loading new data)
-    input logic [7:0]   data_in,   // Dado de 8 bits a ser carregado (8-bit data to be loaded)
+    input logic         clk,       
+    input logic         reset,     // Reset síncrono (High) 
+    input logic         load_ac,   // Habilita a load de um novo dado 
+    input logic [7:0]   data_in,   // 8-bit data to be loaded
 
-    output logic [7:0]  ac_out     // Valor atual do acumulador (Current accumulator value)
+    output logic [7:0]  ac_out     // Current accumulator value
 );
 
     logic [7:0] ac_reg;
