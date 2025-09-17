@@ -1,2 +1,6 @@
 SVerilog/alu_sim
+<<<<<<< HEAD
 SVerilog/name_sim
+=======
+SVerilog/pc_sim
+>>>>>>> feat/program-counter
