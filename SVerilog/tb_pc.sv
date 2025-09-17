@@ -14,13 +14,10 @@ module tb_pc;
         .pc_out(pc_out)
     );
 
-    // Geração de clock: alterna a cada 5 ns
     initial clk = 0;
     always #5 clk = ~clk;
 
-    // Procedimento de teste
     initial begin
-        // Inicialização
         reset = 1; load = 0; inc = 0; pc_in = 8'd0;
         #10;
 
@@ -39,14 +36,14 @@ module tb_pc;
 
         inc = 0;
 
-        // === Salto para 0x10 ===
+        // jmp to 0x10
         pc_in = 8'h10;
         load = 1;
         @(posedge clk);
         load = 0;
         test(8'h10);
 
-        // === Incrementa mais 2 vezes ===
+        // Incrementa 2
         inc = 1;
 
         @(posedge clk);
@@ -62,7 +59,6 @@ module tb_pc;
         $finish;
     end
 
-    // Tarefa para verificar o valor do PC
     task test(input logic [7:0] expected);
         if (pc_out === expected) begin
             $display("TEST PASS | Time=%0t | PC=%h | Esperado=%h", $time, pc_out, expected);
