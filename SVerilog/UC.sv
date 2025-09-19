@@ -1,7 +1,7 @@
 module UC (
     input  logic        clk,
     input  logic        reset,
-    input  logic [7:0]  data_bus,   // dado da memória (operandos ou instrução fetch)
+    input  logic [7:0]  data_bus,   // dado da memória 
     input  logic [7:0]  instr_bus,   
 
     input  logic [3:0]  in_port,    // botões
@@ -13,37 +13,39 @@ module UC (
     output logic [7:0]  alu_operB,
     output logic        alu_Cin,
 
-    // memória ainda a ser implementada
+    // memória
     output logic [7:0]  address_bus,
     output logic [7:0]  data_out,
     output logic        mem_we,
     output logic        mem_re,
 
     // acc
-    output logic        acc_load,
-    output logic [7:0]  acc_in,
-    input  logic [7:0]  acc_out,
+    output logic        load_ac,
+    output logic [7:0]  data_in,
+    input  logic [7:0]  ac_out,
 
     // pc
-    output logic        pc_inc,
-    output logic        pc_load,
+    output logic        inc,
+    output logic        load,
     output logic [7:0]  pc_in,
     input  logic [7:0]  pc_out,
 
-    // registradores internos (debug/observabilidade)
+    // debug
     output logic        ERROR
 );
 
     // registradores internos
-    logic [7:0] instr_reg; // armazenar instrução fetch
-
+    logic [7:0] instr_reg;     // armazenar instrução fetch
+    logic [7:0] pc_reg;        // contador de programa
+    logic [7:0] acc_reg;       // acumulador
+    
     // ALU
     logic [7:0] alu_result;
     logic       alu_N, alu_Z, alu_C, alu_B, alu_V;
 
     ALU alu0 (
         .operacao(alu_op),
-        .operA(acc_out),
+        .operA(acc_reg),
         .operB(data_bus),
         .Cin(alu_Cin),
         .result(alu_result),
@@ -53,9 +55,6 @@ module UC (
         .B(alu_B),
         .V(alu_V)
     );
-
-    // Sinais de controle
-    logic mem_read, mem_write;
 
     // Estados da FSM
     typedef enum logic [1:0] {
@@ -74,6 +73,7 @@ module UC (
         LDA   = 8'b0010_0000,
         ADD   = 8'b0011_0000,
         IOR   = 8'b0100_0000,
+        XOR   = 8'b0001_1000,
         IAND  = 8'b0101_0000,
         INOT  = 8'b0110_0000,
         SUB   = 8'b0111_0000,
@@ -100,9 +100,9 @@ module UC (
         ULA_ADD = 4'b0001,
         ULA_SUB = 4'b0010,
         ULA_OU  = 4'b0011,
+        ULA_XOU = 4'b0110,
         ULA_E   = 4'b0100,
         ULA_NAO = 4'b0101,
-        ULA_XOU = 4'b0110,
         ULA_DLE = 4'b0111,
         ULA_DLD = 4'b1000,
         ULA_DAE = 4'b1001,
@@ -118,98 +118,157 @@ module UC (
             out_port <= 4'b0;
         end else begin
             state <= next_state;
+            instr_reg <= instr_bus;
 
-            // Atualização de registradores
-            if(acc_we) acc_reg <= alu_result;
-            else if(io_re) acc_reg <= {4'b0, in_port};
-            else if(load_from_mem) acc_reg <= data_bus;
+            // Atualização do acumulador 
+            if(load_ac) 
+                acc_reg <= alu_result;
+            else if(io_re) 
+                acc_reg <= {4'b0, in_port};
+            else if(load_from_mem) 
+                acc_reg <= data_bus;
 
-            if(io_we) out_port <= acc_reg[3:0];
+            // Atualização da saída
+            if(io_we) 
+                out_port <= acc_reg[3:0];
 
-            if(pc_load) pc_reg <= data_bus;
-            else if(pc_inc) pc_reg <= pc_reg + 1;
+            // Atualização do PC
+            if(load) 
+                pc_reg <= data_bus;
+            else if(inc) 
+                pc_reg <= pc_reg + 1;
 
-            // mem_write / mem_read pulsos
-            if(mem_write) data_out <= acc_reg;
-            address_bus <= data_bus; // simplificado
+            // Conexões para memória
+            data_out <= acc_reg;
+            address_bus <= (state == FETCH) ? pc_reg : data_bus;
         end
     end
 
-    // FSM combinacional
+    // Sinais auxiliares 
+    logic load_from_mem;
+    logic io_re, io_we;
+
+    // FSM combinacional - Geração DIRETA dos sinais de controle
     always_comb begin
-        // defaults
-        alu_op        = 4'b0000;
-        alu_operA     = acc_reg;
-        alu_operB     = data_bus;
-        alu_Cin       = 1'b0;
-        acc_we        = 0;
-        pc_inc        = 0;
-        pc_load       = 0;
-        io_we         = 0;
-        io_re         = 0;
-        load_from_mem = 0;
-        mem_write     = 0;
-        mem_re        = 0;
-        ERROR         = 0;
-        next_state    = state;
+        alu_op = 4'b0000;
+        alu_operA = acc_reg;
+        alu_operB = data_bus;
+        alu_Cin = 1'b0;
+        load_ac = 1'b0;      
+        inc = 1'b0;          
+        load = 1'b0;         
+        io_we = 1'b0;
+        io_re = 1'b0;
+        load_from_mem = 1'b0;
+        mem_we = 1'b0;
+        mem_re = 1'b0;
+        ERROR = 1'b0;
+        next_state = state;
 
         case(state)
             FETCH: begin
-                // ler instrução da memória (data_bus) -> instr_reg
-                instr_reg = instr_bus;
-                pc_inc    = 1'b1;
+                mem_re = 1'b1;    // Ler memória para fetch
+                inc = 1'b1;       // Incrementar PC ← DIRETO!
                 next_state = DECODE;
             end
 
             DECODE: begin
-                // prepara sinais para execução
+                if (instr_reg != NOP && instr_reg != HLT) begin
+                    mem_re = 1'b1;  // Ler operando
+                end
                 next_state = EXEC;
             end
 
             EXEC: begin
                 case(instr_reg)
-                    NOP: ;
-                    ADD: begin alu_op = ULA_ADD; acc_we=1; end
-                    SUB: begin alu_op = ULA_SUB; acc_we=1; end
-                    IOR: begin alu_op = ULA_OU; acc_we=1; end
-                    XOU: begin alu_op = ULA_XOU; acc_we; end
-                    IAND: begin alu_op = ULA_E; acc_we=1; end
-                    INOT: begin alu_op = ULA_NAO; acc_we=1; end
-                    LDA: begin mem_re = 1; load_from_mem = 1; end
-                    STA: begin mem_write = 1; end
-                    JMP: pc_load = 1; 
-                    JN: if(alu_N) pc_load=1;
-                    JP: if(!alu_N) pc_load=1;
-                    JV: if(alu_V) pc_load=1;
-                    JNV: if(!alu_V) pc_load=1;
-                    JZ: if(alu_Z) pc_load=1;
-                    JNZ: if(!alu_Z) pc_load=1;
-                    JC: if(alu_C) pc_load=1;
-                    JNC: if(!alu_C) pc_load=1;
-                    JB: if(alu_B) pc_load=1;
-                    JNB: if(!alu_B) pc_load=1;
-                    SHR: begin alu_op = ULA_DAD; acc_we=1; end
-                    SHL: begin alu_op = ULA_DLE; acc_we=1; end
-                    IROR: begin alu_op = ULA_DLD; acc_we=1; end
-                    IROL: begin alu_op = ULA_DLE; acc_we=1; end
-                    IN: begin io_re=1; end
-                    OUT: begin io_we=1; end
-                    HLT: begin next_state = EXEC; end // para máquina
-                    default: ERROR=1;
+                    NOP: begin /* No operation */ end
+                    ADD: begin 
+                        alu_op = ULA_ADD; 
+                        load_ac = 1'b1;  
+                    end
+                    SUB: begin 
+                        alu_op = ULA_SUB; 
+                        load_ac = 1'b1;  
+                    end
+                    IOR: begin 
+                        alu_op = ULA_OU; 
+                        load_ac = 1'b1;  
+                    end
+                    XOU: begin 
+                        alu_op = ULA_XOU; 
+                        load_ac = 1'b1;  
+                    end
+                    IAND: begin 
+                        alu_op = ULA_E; 
+                        load_ac = 1'b1;  
+                    end
+                    INOT: begin 
+                        alu_op = ULA_NAO; 
+                        load_ac = 1'b1;  
+                    end
+                    LDA: begin 
+                        mem_re = 1'b1; 
+                        load_from_mem = 1'b1; 
+                    end
+                    STA: begin 
+                        mem_we = 1'b1; 
+                    end
+                    JMP: begin 
+                        load = 1'b1;  
+                    end
+                    JN: if(alu_N) load = 1'b1;     
+                    JP: if(!alu_N) load = 1'b1;    
+                    JV: if(alu_V) load = 1'b1;     
+                    JNV: if(!alu_V) load = 1'b1;   
+                    JZ: if(alu_Z) load = 1'b1;     
+                    JNZ: if(!alu_Z) load = 1'b1;   
+                    JC: if(alu_C) load = 1'b1;     
+                    JNC: if(!alu_C) load = 1'b1;   
+                    JB: if(alu_B) load = 1'b1;     
+                    JNB: if(!alu_B) load = 1'b1;   
+                    SHR: begin 
+                        alu_op = ULA_DAD; 
+                        load_ac = 1'b1;  
+                    end
+                    SHL: begin 
+                        alu_op = ULA_DLE; 
+                        load_ac = 1'b1;  
+                    end
+                    IROR: begin 
+                        alu_op = ULA_DLD; 
+                        load_ac = 1'b1;  
+                    end
+                    IROL: begin 
+                        alu_op = ULA_DAE; 
+                        load_ac = 1'b1;  
+                    end
+                    IN: begin 
+                        io_re = 1'b1; 
+                    end
+                    OUT: begin 
+                        io_we = 1'b1; 
+                    end
+                    HLT: begin 
+                        next_state = EXEC;
+                    end
+                    default: ERROR = 1'b1;
                 endcase
-                next_state = UPDATE;
+                
+                if (instr_reg != HLT) begin
+                    next_state = UPDATE;
+                end
             end
 
             UPDATE: begin
-                next_state = FETCH; // próximo ciclo: fetch da nova instrução
+                next_state = FETCH;
             end
 
             default: next_state = FETCH;
         endcase
     end
 
-    // expose registradores
-    assign ACC = acc_reg;
-    assign PC  = pc_reg;
+    // Conexões simples
+    assign data_in = data_bus;
+    assign pc_in = data_bus;
 
 endmodule
