@@ -16,7 +16,7 @@
 ### Simular no terminal p/ SystemVerilog
 
 Sintetizar com icuarus
->iverilog -g2012 -o name_sim module_name.sv tb_module_name.sv
+>iverilog -g2012 -o name_sim UC.sv TOP.sv PMEM.sv DPATH.sv tb_TOP.sv
 
 Simular tesbench
 >vvp name_sim
