@@ -1,179 +1,125 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+LIBRARY ieee ;
+USE ieee.std_logic_1164.all ;
+USE ieee.std_logic_unsigned.all ;
 
-entity ALU is
+ENTITY ALU IS
 	PORT
 	(
-		operacao 	: IN unsigned (3 DOWNTO 0);
-		operA		: IN unsigned(7 DOWNTO 0);
-		operB		: IN unsigned(7 DOWNTO 0);
-		result		: out unsigned(7 DOWNTO 0);	
-		Cin			: IN STD_LOGIC; 				-- Carry in
-		-- negative , zero, carry, borrow, overflow
-		N,Z,C,B,V 	: out STD_LOGIC			
+		operacao : IN STD_LOGIC_VECTOR (3 DOWNTO 0);
+		operA	: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		operB	: IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+		Result	: buffer STD_LOGIC_VECTOR(7 DOWNTO 0);
+		Cin		: IN STD_LOGIC;
+		N,Z,C,B,V : buffer STD_LOGIC		
 	);
-end ALU;
+END ALU;
 
-architecture alu of ALU is
+ARCHITECTURE alu OF ALU IS
+constant ADIC : STD_LOGIC_VECTOR(3 DOWNTO 0):="0001";
+constant SUB  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0010";
+constant OU   : STD_LOGIC_VECTOR(3 DOWNTO 0):="0011";
+constant XOU  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0110";
+constant E    : STD_LOGIC_VECTOR(3 DOWNTO 0):="0100";
+constant NAO  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0101";
+constant DLE  : STD_LOGIC_VECTOR(3 DOWNTO 0):="0111";
+constant DLD  : STD_LOGIC_VECTOR(3 DOWNTO 0):="1000";
+constant DAE  : STD_LOGIC_VECTOR(3 DOWNTO 0):="1001";
+constant DAD  : STD_LOGIC_VECTOR(3 DOWNTO 0):="1010";
 
--- opcodes
-constant ADIC : unsigned(3 DOWNTO 0) 	:= "0001";
-constant SUB  : unsigned(3 DOWNTO 0) 	:= "0010";
-constant OU   : unsigned(3 DOWNTO 0) 	:= "0011";
-constant E    : unsigned(3 DOWNTO 0) 	:= "0100";
-constant NAO  : unsigned(3 DOWNTO 0) 	:= "0101";
-constant XOU  : unsigned(3 DOWNTO 0)	:= "0110";
-constant DLE  : unsigned(3 DOWNTO 0) 	:= "0111";
-constant DLD  : unsigned(3 DOWNTO 0) 	:= "1000";
-constant DAE  : unsigned(3 DOWNTO 0) 	:= "1001";
-constant DAD  : unsigned(3 DOWNTO 0) 	:= "1010";
 
-signal r_bf 	: unsigned(7 downto 0) := (others => '0');
-
--- Record para organizar as flags
-type flags_t is record
-	N : std_logic;
-	Z : std_logic;
-	C : std_logic;
-	B : std_logic;
-	V : std_logic;
-end record;
-
--- Sinal interno das flags
-signal f : flags_t := (
-	N => '0',
-	Z => '0',
-	C => '0',
-	B => '0',
-	V => '0'
-);
-
-begin
-	process (operA, operB, operacao,r_bf,Cin)
-	variable temp : unsigned(8 DOWNTO 0);
-	variable res8 : std_logic;
-
+BEGIN
+	process (operA, operB, operacao,Cin)
+	
+	variable temp : STD_LOGIC_VECTOR(8 DOWNTO 0);
+	
 	begin
+		result <= "00000000";
+		C <= '0';
+		V <= '0';
+		B <= '0';
 		case operacao is
-
 		when ADIC =>
-			temp := ('0' & operA) + ('0' & operB);
-			r_bf <= temp(7 downto 0);
-			f.C <= temp(8);
-			f.Z <= '1' when temp(7 downto 0) = "00000000" else '0';
-			f.N <= temp(7);
-
-			if operA(7) = operB(7) then
-				if operA(7) /= temp(7) then
-					f.V <= '1';
-				else
-					f.V <= '0';
+			temp := ('0'&operA) + ('0'&operB);
+			result <= temp(7 DOWNTO 0);
+			C <= temp(8);
+			if (operA(7)=operB(7)) then
+				if (operA(7) /= result(7)) then V <= '1';
+					else V <= '0';
 				end if;
-			else
-				f.V <= '0';
+			else V <= '0';
 			end if;
-
 		when SUB =>
-			temp := ('0' & operA) - ('0' & operB);
-			r_bf <= temp(7 downto 0);
-			f.B <= temp(8);
-			f.Z <= '1' when temp(7 downto 0) = "00000000" else '0';
-			f.N <= temp(7);
-
-			if operA(7) /= operB(7) then
-				if operA(7) /= temp(7) then
-					f.V <= '1';
-				else
-					f.V <= '0';
+			temp := ('0'&operA) - ('0'&operB);
+			result <= temp(7 DOWNTO 0);
+			B <= temp(8);
+			if (operA(7) /= operB(7)) then
+				if (operA(7) /= result(7)) then V <= '1';
+					else V <= '0';
 				end if;
-			else
-				f.V <= '0';
+			else V <= '0';
 			end if;
-
 		when OU =>
-			r_bf <= operA or operB;
-		
+			result <= operA or operB;
 		when E =>
-			r_bf <= operA and operB;
-		
+			result <= operA and operB;
 		when NAO =>
-			r_bf <= not operA;
-		
-		when XOU =>
-			r_bf <= operA xor operB;
-
-		--shift aritimetico para esquerda
+			result <= not operA;
+        when XOU =>
+			result <= operA xor operB;
 		when DLE =>
-			f.C <= operA(7);
-			r_bf(7) <= operA(6);
-			r_bf(6) <= operA(5);
-			r_bf(5) <= operA(4);
-			r_bf(4) <= operA(3);
-			r_bf(3) <= operA(2);
-			r_bf(2) <= operA(1);
-			r_bf(1) <= operA(0);
-			r_bf(0) <= Cin;
-		
-		-- shift aritimetico para esquerda
+			C <= operA(7);
+			result(7) <= operA(6);
+			result(6) <= operA(5);
+			result(5) <= operA(4);
+			result(4) <= operA(3);
+			result(3) <= operA(2);
+			result(2) <= operA(1);
+			result(1) <= operA(0);
+			result(0) <= Cin;
 		when DAE =>
-			f.C <= operA(7);
-			r_bf(7) <= operA(6);
-			r_bf(6) <= operA(5);
-			r_bf(5) <= operA(4);
-			r_bf(4) <= operA(3);
-			r_bf(3) <= operA(2);
-			r_bf(2) <= operA(1);
-			r_bf(1) <= operA(0);
-			r_bf(0) <= '0';
-		
-		-- shift logico para direita
+			C <= operA(7);
+			result(7) <= operA(6);
+			result(6) <= operA(5);
+			result(5) <= operA(4);
+			result(4) <= operA(3);
+			result(3) <= operA(2);
+			result(2) <= operA(1);
+			result(1) <= operA(0);
+			result(0) <= '0';
 		when DLD =>
-			f.C <= operA(0);
-			r_bf(0) <= operA(1);
-			r_bf(1) <= operA(2);
-			r_bf(2) <= operA(3);
-			r_bf(3) <= operA(4);
-			r_bf(4) <= operA(5);
-			r_bf(5) <= operA(6);
-			r_bf(6) <= operA(7);
-			r_bf(7) <= Cin;
-		
-		-- shift aritimetico para direita
+			C <= operA(0);
+			result(0) <= operA(1);
+			result(1) <= operA(2);
+			result(2) <= operA(3);
+			result(3) <= operA(4);
+			result(4) <= operA(5);
+			result(5) <= operA(6);
+			result(6) <= operA(7);
+			result(7) <= Cin;
 		when DAD =>
-			f.C <= operA(0);
-			r_bf(0) <= operA(1);
-			r_bf(1) <= operA(2);
-			r_bf(2) <= operA(3);
-			r_bf(3) <= operA(4);
-			r_bf(4) <= operA(5);
-			r_bf(5) <= operA(6);
-			r_bf(6) <= operA(7);
-			r_bf(7) <= '0';	
-
-		
+			C <= operA(0);
+			result(0) <= operA(1);
+			result(1) <= operA(2);
+			result(2) <= operA(3);
+			result(3) <= operA(4);
+			result(4) <= operA(5);
+			result(5) <= operA(6);
+			result(6) <= operA(7);
+			result(7) <= '0';		
 		when others =>
-			r_bf <= (others =>'0');
-			f.Z <= '0';
-			f.N <= '0';
-			f.C <= '0';
-			f.V <= '0';
-			f.B <= '0';
+			result <= "00000000";
+			C <= '0';
+			V <= '0';
+			B <= '0';
 		end case;
-		
-		-- when r_bf is zero, FLAG Z = 1
-		if temp(7 downto 0) = "00000000" then
-			f.Z <= '1'; else f.Z <= '0';
-		end if;
-
-		
-		f.N <= r_bf(7);
-
-		N <= f.N;
-		Z <= f.Z;
-		C <= f.C;
-		B <= f.B;
-		V <= f.V;
-		result <= r_bf;
 	end process;
-end alu;
+	
+	process(result)
+		begin
+		if (result="00000000") then 
+				Z <= '1'; else Z <= '0';
+			end if;
+			N <= result(7);
+	end process;
+	
+END alu;
