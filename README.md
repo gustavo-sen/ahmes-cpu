@@ -22,20 +22,29 @@ Simular tesbench
 >vvp name_sim
 
 ### Simular no terminal p/ VHDL
-Sintetizar entidade desejada
-> ghdl -a entity_name.vhd
+1. Sintetizar entidade desejada
+> ghdl -a ahmes_uc.vhd
 
-Sinteizar testbench da entidade em teste
-> ghdl -a tb_entity_name.vhd
+2. Sinteizar testbench da entidade em teste
+> ghdl -a tb_ahmes_uc.vhd
 
-Gerar arquivos de simulação
-> ghdl -e tb_entity_name
-> ghdl -r tb_entity_name
+3. Gerar arquivos de simulação
+> ghdl -e tb_ahmes_uc
+> ghdl -r tb_ahmes_uc --vcd=wave.vcd
 
 ### Simular com GtkWave
 Para usar o GtkWave e visualizar os sinais:
 gera um arquivo com um tempo de simulação 
 > ghdl -r tb_enitty --stop-time=100ms --vcd=nome_da_simulacao.vcd
 executa o arquivo gerado
-> > gtkwave nome_da_simulacao.vcd
+> gtkwave wave.vcd
 
+
+### Teste Rápido carregando "memoria_soma.vhd"
+ghdl -a ALU.vhd
+ghdl -a memoria_soma.vhd
+ghdl -a ahmes_uc.vhd
+ghdl -a tb_ahmes_uc.vhd
+ghdl -e tb_ahmes_uc
+ghdl -r tb_ahmes_uc --vcd=simulacao.vcd
+gtkwave simulacao.vcd
