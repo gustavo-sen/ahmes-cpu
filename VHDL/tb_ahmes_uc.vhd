@@ -39,11 +39,12 @@ architecture tb of tb_ahmes_uc is
 
 begin
 
-    -- Instanciação da Unidade de Controle (UUT)
     UUT : ahmes_uc port map ( address_bus => s_address_bus, data_in => s_data_mem_uc, data_out => s_data_uc_mem, mem_write => s_mem_write, clk => s_clk, reset => s_reset, ERROR => s_error, btns => s_btns, leds => s_leds, OPERACAO => s_operacao, OPER_A => s_oper_a, OPER_B => s_oper_b, RESULT => s_result, Cout => s_cout, N => s_n, Z => s_z, C => s_c, B => s_b, V => s_v );
 
     -- Instanciação da Memória
-    MEM : memoria port map ( address_bus => s_address_bus, data_in => s_data_uc_mem, data_out => s_data_mem_uc, mem_write => s_mem_write, clk => s_clk, rst => s_reset );
+    --MEM : memoria port map ( address_bus => s_address_bus, data_in => s_data_uc_mem, data_out => s_data_mem_uc, mem_write => s_mem_write, clk => s_clk, rst => s_reset );
+
+    MEM : memoria_led port map ( address_bus => s_address_bus, data_in => s_data_uc_mem, data_out => s_data_mem_uc, mem_write => s_mem_write, clk => s_clk, rst => s_reset );
 
     -- Instanciação da ALU
     ULA : ALU
