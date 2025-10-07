@@ -14,69 +14,74 @@ ENTITY memoria_led IS
 END memoria_led;
 
 ARCHITECTURE MEMO OF memoria_led IS
-    -- Opcodes
-    constant STA    : unsigned(7 downto 0) := x"10";
-    constant LDA    : unsigned(7 downto 0) := x"20";
-    constant ADD    : unsigned(7 downto 0) := x"30";
-    constant HLT    : unsigned(7 downto 0) := x"F0";
+    -- Opcodes e Endereços Especiais
+    constant STA      : unsigned(7 downto 0) := x"10";
+    constant LDA      : unsigned(7 downto 0) := x"20";
+    constant ADD      : unsigned(7 downto 0) := x"30";
+    constant JMP      : unsigned(7 downto 0) := x"80";
+    constant JZ       : unsigned(7 downto 0) := x"A0";
+    constant HLT      : unsigned(7 downto 0) := x"F0";
+    constant ADDR_BTN : unsigned(7 downto 0) := x"FE";
+    -- =================================================================
+    -- == CORREÇÃO 1: Adicionar a constante do endereço dos LEDs      ==
+    -- =================================================================
+    constant ADDR_LED : unsigned(7 downto 0) := x"F8"; -- Endereço especial dos LEDs (248)
 
     -- Tipo da memória
     TYPE data_array_type IS ARRAY (0 TO 255) OF unsigned(7 downto 0);
     signal data_array_sig : data_array_type;
 
 BEGIN
-    process (rst,clk)
-    VARIABLE DATA_ARRAY: DATA;
-        BEGIN
-            IF (RST='1') THEN
-                -- Program to select dataset based on button input
-                -- 1. Read button state
-                DATA_ARRAY(0) := LDA;       -- Load accumulator from button address
-                DATA_ARRAY(1) := ADDR_BTN;  -- Special address for buttons (254)
-                
-                -- 2. Test if buttons are zero by updating ALU flags
-                DATA_ARRAY(2) := ADD;       -- Add content of address 132 (which is 0) to AC
-                DATA_ARRAY(3) := 132;       -- AC = AC + 0. This sets Z flag if AC is 0.
-                
-                -- 3. Conditional Jump
-                DATA_ARRAY(4) := JZ;        -- If Z=1 (no buttons pressed), Jump to Dataset A code
-                DATA_ARRAY(5) := 10;        -- Target address for jump (start of Dataset A)
-                
-                -- 4. Code for Dataset B (if buttons were pressed, fall-through here)
-                DATA_ARRAY(6) := LDA;       -- Load AC with value from address 129 (5)
-                DATA_ARRAY(7) := 129;
-                DATA_ARRAY(8) := ADD;       -- Add value from address 133 (1)
-                DATA_ARRAY(9) := 133;
-                DATA_ARRAY(10) := JMP;      -- Jump to the end to store the result
-                DATA_ARRAY(11) := 16;       -- Target address for jump (STA instruction)
+    process (rst, clk)
+    begin
+        IF (rst = '1') THEN
+            -- O programa principal (endereços 0 a 15) permanece o mesmo
+            data_array_sig(0) <= LDA;
+            data_array_sig(1) <= ADDR_BTN;
+            data_array_sig(2) <= ADD;
+            data_array_sig(3) <= to_unsigned(132, 8);
+            data_array_sig(4) <= JZ;
+            data_array_sig(5) <= to_unsigned(12, 8);
+            data_array_sig(6) <= LDA;
+            data_array_sig(7) <= to_unsigned(129, 8);
+            data_array_sig(8) <= ADD;
+            data_array_sig(9) <= to_unsigned(133, 8);
+            data_array_sig(10) <= JMP;
+            data_array_sig(11) <= to_unsigned(16, 8);
+            data_array_sig(12) <= LDA;
+            data_array_sig(13) <= to_unsigned(130, 8);
+            data_array_sig(14) <= ADD;
+            data_array_sig(15) <= to_unsigned(131, 8);
+            
+            -- =================================================================
+            -- == CORREÇÃO 2: Modificar o final do programa para ativar os LEDs ==
+            -- =================================================================
+            -- 6. Armazena o resultado (opcional, mas bom para depuração)
+            data_array_sig(16) <= STA;
+            data_array_sig(17) <= to_unsigned(128, 8);
 
-                -- 5. Code for Dataset A (starts at address 10)
-                DATA_ARRAY(12) := LDA;      -- Load AC with value from address 130 (10)
-                DATA_ARRAY(13) := 130;
-                DATA_ARRAY(14) := ADD;      -- Add value from address 131 (18)
-                DATA_ARRAY(15) := 131;
-                
-                -- 6. Store the result from either dataset and halt
-                DATA_ARRAY(16) := STA;      -- Store the result of the ADD in address 128
-                DATA_ARRAY(17) := 128;
-                DATA_ARRAY(18) := HLT;      -- Halt processor
-                
-                -- Initialize memory with data values (our "datasets")
-                DATA_ARRAY(128) := 0;       -- Result storage
-                DATA_ARRAY(129) := 5;       -- Dataset B, value 1
-                DATA_ARRAY(130) := 10;      -- Dataset A, value 1
-                DATA_ARRAY(131) := 18;      -- Dataset A, value 2
-                DATA_ARRAY(132) := 0;       -- Constant 0 for testing flags
-                DATA_ARRAY(133) := 1;       -- Dataset B, value 2
+            -- 7. Envia o mesmo resultado (que ainda está no acumulador) para os LEDs
+            data_array_sig(18) <= STA;
+            data_array_sig(19) <= ADDR_LED; -- Usa o endereço especial dos LEDs
 
-            ELSIF (RISING_EDGE(clk)) THEN
-                if mem_write = '1' then
-                    DATA_ARRAY(ADDRESS_BUS) := DATA_IN;
-                else
-                    DATA_ARRAY := DATA_ARRAY;
-                end if;	
-            END IF;		
-            data_array_sig <= data_ARRAY;
+            -- 8. Para o processador
+            data_array_sig(20) <= HLT;
+            
+            -- Os dados (datasets) permanecem os mesmos
+            data_array_sig(128) <= to_unsigned(0, 8);
+            data_array_sig(129) <= to_unsigned(5, 8);
+            data_array_sig(130) <= to_unsigned(10, 8);
+            data_array_sig(131) <= to_unsigned(18, 8);
+            data_array_sig(132) <= to_unsigned(0, 8);
+            data_array_sig(133) <= to_unsigned(1, 8);
+
+        ELSIF (rising_edge(clk)) THEN
+            if mem_write = '1' then
+                data_array_sig(to_integer(address_bus)) <= data_in;
+            end if; 
+        END IF;     
     end process;
+    
+    data_out <= (others => '0') when rst = '1' else data_array_sig(to_integer(address_bus));
 
 END MEMO;
