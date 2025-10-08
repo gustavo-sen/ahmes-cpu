@@ -71,14 +71,41 @@ begin
     -- Geração de estímulos
     stimuli : process
     begin
+        -- 1. Inicia o sistema em reset
         s_reset <= '1';
+        s_btns  <= "0000"; -- Botões em estado inicial (nenhum pressionado)
         wait for CLK_PERIOD * 2;
+        
+        -- 2. Libera o reset para o programa começar a rodar
         s_reset <= '0';
-        wait for CLK_PERIOD * 50;
-        report "Simulacao finalizada." severity failure;
+        report "Reset liberado. Programa em execucao.";
+        wait for CLK_PERIOD * 20; -- Espera um tempo para o loop estabilizar
+
+        -- 3. Simula o pressionamento do botão 0
+        report "Simulando BTN0 pressionado.";
+        s_btns <= "0001";
+        wait for CLK_PERIOD * 20; -- Espera o processador ler e atualizar os LEDs
+
+        -- 4. Simula o pressionamento dos botões 1 e 3
+        report "Simulando BTN1 e BTN3 pressionados.";
+        s_btns <= "1010"; -- Valor 10 em decimal
+        wait for CLK_PERIOD * 20;
+
+        -- 5. Simula o pressionamento de todos os botões
+        report "Simulando todos os botoes pressionados.";
+        s_btns <= "1111";
+        wait for CLK_PERIOD * 20;
+        
+        -- 6. Simula a liberação de todos os botões
+        report "Simulando todos os botoes liberados.";
+        s_btns <= "0000";
+        wait for CLK_PERIOD * 20;
+
+        -- 7. Finaliza a simulação
+        report "Simulacao finalizada com sucesso." severity failure;
         wait;
     end process;
 
-    
+
 
 end tb;

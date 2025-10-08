@@ -58,3 +58,12 @@ ghdl -a tb_ahmes_uc.vhd
 ghdl -e tb_ahmes_uc
 ghdl -r tb_ahmes_uc --vcd=simulacao.vcd
 gtkwave simulacao.vcd
+
+### Teste Rápido carregando "memoria_led_btns.vhd"
+ghdl -a ALU.vhd
+ghdl -a memoria_led.vhd
+ghdl -a ahmes_uc.vhd
+ghdl -a tb_ahmes_uc_leds_btns.vhd
+ghdl -e tb_ahmes_uc
+ghdl -r tb_ahmes_uc --vcd=simulacao.vcd
+gtkwave simulacao.vcd
