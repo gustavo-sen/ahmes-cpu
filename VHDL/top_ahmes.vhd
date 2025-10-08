@@ -34,7 +34,6 @@ ARCHITECTURE structural OF top_ahmes IS
     END COMPONENT ahmes_uc;
 
     -- Component Declaration for Memory (memoria)
-    -- Corrected to match the 'memoria' entity (using unsigned)
     COMPONENT memoria IS
         PORT (
             address_bus : IN  unsigned(7 downto 0);
@@ -66,7 +65,7 @@ ARCHITECTURE structural OF top_ahmes IS
     SIGNAL s_operacao    : unsigned(3 DOWNTO 0);
     SIGNAL s_oper_a      : unsigned(7 DOWNTO 0);
     SIGNAL s_oper_b      : unsigned(7 DOWNTO 0);
-    SIGNAL s_result_alu  : unsigned(7 DOWNTO 0);
+    SIGNAL s_result_alu  : STD_LOGIC_VECTOR(7 DOWNTO 0);
     SIGNAL s_n, s_z, s_c, s_b, s_v : std_logic;
     SIGNAL s_leds        : unsigned(3 DOWNTO 0);
 
@@ -87,7 +86,7 @@ BEGIN
             OPERACAO    => s_operacao,
             OPER_A      => s_oper_a,
             OPER_B      => s_oper_b,
-            RESULT      => s_result_alu,
+            RESULT      => unsigned(s_result_alu),
             N           => s_n,
             Z           => s_z,
             C           => s_c,
