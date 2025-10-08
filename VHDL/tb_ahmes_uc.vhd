@@ -10,6 +10,7 @@ architecture tb of tb_ahmes_uc is
     -- (As declarações dos componentes permanecem as mesmas)
     component ahmes_uc port ( address_bus : out unsigned(7 downto 0); data_in : in unsigned(7 downto 0); data_out : out unsigned(7 downto 0); mem_write : out std_logic; clk : in std_logic; reset : in std_logic; ERROR : out std_logic; btns : in unsigned(3 downto 0); leds : out unsigned(3 downto 0); OPERACAO : out unsigned(3 downto 0); OPER_A : out unsigned(7 downto 0); OPER_B : out unsigned(7 downto 0); RESULT : in unsigned(7 downto 0); Cout : out std_logic; N, Z, C, B, V : in std_logic ); end component;
     component memoria port ( address_bus : in unsigned(7 downto 0); data_in : in unsigned(7 downto 0); data_out : out unsigned(7 downto 0); mem_write : in std_logic; clk : in std_logic; rst : in std_logic ); end component;
+    component memoria_led port ( address_bus : in unsigned(7 downto 0); data_in : in unsigned(7 downto 0); data_out : out unsigned(7 downto 0); mem_write : in std_logic; clk : in std_logic; rst : in std_logic ); end component;
     component ALU port ( operacao : in std_logic_vector(3 downto 0); operA : in std_logic_vector(7 downto 0); operB : in std_logic_vector(7 downto 0); Result : out std_logic_vector(7 downto 0); Cin : in std_logic; N, Z, C, B, V : out std_logic ); end component;
 
 
@@ -39,11 +40,11 @@ architecture tb of tb_ahmes_uc is
 
 begin
 
-    -- Instanciação da Unidade de Controle (UUT)
     UUT : ahmes_uc port map ( address_bus => s_address_bus, data_in => s_data_mem_uc, data_out => s_data_uc_mem, mem_write => s_mem_write, clk => s_clk, reset => s_reset, ERROR => s_error, btns => s_btns, leds => s_leds, OPERACAO => s_operacao, OPER_A => s_oper_a, OPER_B => s_oper_b, RESULT => s_result, Cout => s_cout, N => s_n, Z => s_z, C => s_c, B => s_b, V => s_v );
 
     -- Instanciação da Memória
-    MEM : memoria port map ( address_bus => s_address_bus, data_in => s_data_uc_mem, data_out => s_data_mem_uc, mem_write => s_mem_write, clk => s_clk, rst => s_reset );
+    --MEM : memoria port map ( address_bus => s_address_bus, data_in => s_data_uc_mem, data_out => s_data_mem_uc, mem_write => s_mem_write, clk => s_clk, rst => s_reset );
+    MEM : memoria_led port map ( address_bus => s_address_bus, data_in => s_data_uc_mem, data_out => s_data_mem_uc, mem_write => s_mem_write, clk => s_clk, rst => s_reset );
 
     -- Instanciação da ALU
     ULA : ALU
