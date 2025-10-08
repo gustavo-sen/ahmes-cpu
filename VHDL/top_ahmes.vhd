@@ -13,7 +13,7 @@ END ENTITY top_ahmes;
 
 ARCHITECTURE structural OF top_ahmes IS
 
-    -- Declaração do Componente da Unidade de Controle
+    -- Component Declaration for the Control Unit (ahmes_uc)
     COMPONENT ahmes_uc IS
         PORT (
             address_bus : OUT unsigned(7 DOWNTO 0);
@@ -33,19 +33,20 @@ ARCHITECTURE structural OF top_ahmes IS
         );
     END COMPONENT ahmes_uc;
 
-    -- Declaração do Componente de Memória
+    -- Component Declaration for Memory (memoria)
+    -- Corrected to match the 'memoria' entity (using unsigned)
     COMPONENT memoria IS
         PORT (
-            address_bus : IN  INTEGER RANGE 0 TO 255;
-            data_in     : IN  INTEGER RANGE 0 TO 255;
-            data_out    : OUT INTEGER RANGE 0 TO 255;
+            address_bus : IN  unsigned(7 downto 0);
+            data_in     : IN  unsigned(7 downto 0);
+            data_out    : OUT unsigned(7 downto 0);
             mem_write   : IN  std_logic;
             clk         : IN  std_logic;
             rst         : IN  std_logic
         );
     END COMPONENT memoria;
 
-    -- Declaração do Componente da ALU
+    -- Component Declaration for the ALU
     COMPONENT ALU IS
         PORT (
             operacao : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -57,7 +58,7 @@ ARCHITECTURE structural OF top_ahmes IS
         );
     END COMPONENT ALU;
 
-    -- Sinais de interconexão
+    -- Interconnection Signals
     SIGNAL s_address_bus : unsigned(7 DOWNTO 0);
     SIGNAL s_data_to_uc  : unsigned(7 DOWNTO 0);
     SIGNAL s_data_from_uc: unsigned(7 DOWNTO 0);
@@ -65,12 +66,13 @@ ARCHITECTURE structural OF top_ahmes IS
     SIGNAL s_operacao    : unsigned(3 DOWNTO 0);
     SIGNAL s_oper_a      : unsigned(7 DOWNTO 0);
     SIGNAL s_oper_b      : unsigned(7 DOWNTO 0);
-    SIGNAL s_result      : unsigned(7 DOWNTO 0);
+    SIGNAL s_result_alu  : unsigned(7 DOWNTO 0);
     SIGNAL s_n, s_z, s_c, s_b, s_v : std_logic;
+    SIGNAL s_leds        : unsigned(3 DOWNTO 0);
 
 BEGIN
 
-    -- Instanciação da Unidade de Controle
+    -- Instantiation of the Control Unit
     uc_inst : ahmes_uc
         PORT MAP (
             address_bus => s_address_bus,
@@ -79,13 +81,13 @@ BEGIN
             mem_write   => s_mem_write,
             clk         => clk,
             reset       => reset,
-            ERROR       => OPEN, -- Não conectado externamente
+            ERROR       => OPEN, -- Not connected externally
             btns        => unsigned(btns),
-            leds        => leds,
+            leds        => s_leds,
             OPERACAO    => s_operacao,
             OPER_A      => s_oper_a,
             OPER_B      => s_oper_b,
-            RESULT      => s_result,
+            RESULT      => s_result_alu,
             N           => s_n,
             Z           => s_z,
             C           => s_c,
@@ -93,30 +95,33 @@ BEGIN
             V           => s_v
         );
 
-    -- Instanciação da Memória
+    -- Instantiation of the Memory
     mem_inst : memoria
         PORT MAP (
-            address_bus => to_integer(s_address_bus),
-            data_in     => to_integer(s_data_from_uc),
+            address_bus => s_address_bus,
+            data_in     => s_data_from_uc,
             data_out    => s_data_to_uc,
             mem_write   => s_mem_write,
             clk         => clk,
             rst         => reset
         );
 
-    -- Instanciação da ALU
+    -- Instantiation of the ALU
     alu_inst : ALU
         PORT MAP (
             operacao => std_logic_vector(s_operacao),
             operA    => std_logic_vector(s_oper_a),
             operB    => std_logic_vector(s_oper_b),
-            Result   => s_result,
-            Cin      => '0', -- Cin não utilizado neste design, conectado a '0'
+            Result   => s_result_alu,
+            Cin      => '0', -- Cin not used, connected to '0'
             N        => s_n,
             Z        => s_z,
             C        => s_c,
             B        => s_b,
             V        => s_v
         );
+
+    -- Connect internal leds signal to the top-level output port
+    leds <= std_logic_vector(s_leds);
 
 END ARCHITECTURE structural;
