@@ -67,3 +67,15 @@ ghdl -a tb_ahmes_uc_leds_btns.vhd
 ghdl -e tb_ahmes_uc
 ghdl -r tb_ahmes_uc --vcd=simulacao.vcd
 gtkwave simulacao.vcd
+
+### Teste Rápido carregando "tb_top_ahmes_spi"
+# 1. Analyze (compile) all component files first
+ghdl -a ALU.vhd
+ghdl -a memoria.vhd
+ghdl -a spi_loader.vhd
+ghdl -a ahmes_uc.vhd
+ghdl -a top_ahmes.vhd
+ghdl -a tb_top_ahmes_spi.vhd
+ghdl -e tb_top_ahmes_spi
+ghdl -r tb_top_ahmes_spi --vcd=simulacao.vcd
+gtkwave simulacao.vcd

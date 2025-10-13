@@ -2,7 +2,7 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.all;
 USE ieee.numeric_std.all;
 
-ENTITY memoria IS
+ENTITY memoria_soma IS
     PORT (
         address_bus : IN  unsigned(7 downto 0);
         data_in     : IN  unsigned(7 downto 0);
@@ -11,9 +11,9 @@ ENTITY memoria IS
         clk         : IN  std_logic;
         rst         : IN  std_logic
     );
-END memoria;
+END memoria_soma;
 
-ARCHITECTURE MEMO OF memoria IS
+ARCHITECTURE MEMO OF memoria_soma IS
     -- Opcodes
     constant STA    : unsigned(7 downto 0) := x"10";
     constant LDA    : unsigned(7 downto 0) := x"20";
