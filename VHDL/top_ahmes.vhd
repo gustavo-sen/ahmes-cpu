@@ -7,15 +7,15 @@ USE ieee.numeric_std.ALL;
 -- =============================================================================
 ENTITY top_entity IS
     PORT (
-        clk          : IN  STD_LOGIC;
-        reset        : IN  STD_LOGIC;
-        btns         : IN  unsigned(3 DOWNTO 0); -- btns(0) será usado para habilitar/desabilitar gravação
-        leds         : OUT unsigned(3 DOWNTO 0);
-        ERROR        : OUT STD_LOGIC;
+        clk          		: IN  STD_LOGIC;
+        reset        		: IN  STD_LOGIC;
+        btns         		: IN  unsigned(3 DOWNTO 0); -- btns(0) será usado para habilitar/desabilitar gravação
+        leds         		: OUT unsigned(3 DOWNTO 0);
+        ERROR        	: OUT STD_LOGIC;
         -- Entradas SPI
-        spi_sck      : IN  STD_LOGIC;
-        spi_ss       : IN  STD_LOGIC;
-        spi_mosi     : IN  STD_LOGIC
+        spi_sck      	: IN  STD_LOGIC;
+        spi_ss       		: IN  STD_LOGIC;
+        spi_mosi     	: IN  STD_LOGIC
     );
 END ENTITY top_entity;
 
@@ -92,6 +92,7 @@ ARCHITECTURE structural OF top_entity IS
     signal s_data_to_mem : unsigned(7 DOWNTO 0); -- Saída de dados da UC para a Memória
     signal s_data_from_mem : unsigned(7 DOWNTO 0); -- Saída de dados da Memória para a UC
     signal s_mem_write, alu_mem_write   : std_logic;
+	signal s_mem_clk: std_logic;
 
     -- Sinais de comunicação entre UC e ALU
     signal s_operacao    : unsigned(3 DOWNTO 0);
@@ -156,12 +157,12 @@ BEGIN
     -- Instancia a Memória
     mem_inst : memoria
         PORT MAP(
-            address_bus => s_address_bus,
-            data_in     => s_data_to_mem,
-            data_out    => s_data_from_mem,
-            mem_write   => s_mem_write,
-            clk         => clk,
-            rst         => reset
+            address_bus 	=> s_address_bus,
+            data_in     		=> s_data_to_mem,
+            data_out   	 	=> s_data_from_mem,
+            mem_write   	=> s_mem_write,
+            clk         		=> s_mem_clk,
+            rst         		=> reset
         );
 
     -- Instancia o SPI Loader
@@ -189,5 +190,6 @@ BEGIN
     -- SPI Loader tiver sinal de mem_write ativo.
 	
     s_mem_write <= alu_mem_write  when switch_enable = '0' else spi_loader_mem_write;
+	s_mem_clk 	<= clk when switch_enable = '0' else spi_sck; 
 
 END ARCHITECTURE structural;
