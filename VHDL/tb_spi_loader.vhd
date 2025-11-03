@@ -16,10 +16,18 @@ architecture sim of tb_spi_loader is
     signal spi_addr_bus : unsigned(7 downto 0);
     signal spi_mem_write: std_logic;
 
-    constant clk_period : time := 10 ns;
-    constant spi_clk_period : time := 200 ns;  -- SPI ~5 MHz
-begin
+    constant clk_period      : time := 10 ns;
+    constant spi_clk_period  : time := 50 ns; 
 
+    -- Vetor de bytes de teste
+    type byte_array is array (natural range <>) of std_logic_vector(7 downto 0);
+    constant test_bytes : byte_array := (
+        "10101010",
+        "11001100",
+        "11110000"
+    );
+
+begin
     --------------------------------------------------------------------
     -- DUT (Device Under Test)
     --------------------------------------------------------------------
@@ -40,7 +48,7 @@ begin
     --------------------------------------------------------------------
     clk_process : process
     begin
-        while now < 3 us loop
+        while now < 5 us loop
             clk <= '0';
             wait for clk_period / 2;
             clk <= '1';
@@ -50,28 +58,35 @@ begin
     end process;
 
     --------------------------------------------------------------------
-    -- Processo de estímulo SPI
+    -- Processo de estímulo SPI com verificação
     --------------------------------------------------------------------
     stim_proc : process
-        -- Dois bytes de dados a transmitir
-        constant packet : std_logic_vector(15 downto 0) := "1010101011110000";
     begin
-        wait for 100 ns;
-        spi_ss <= '0';  -- habilita o slave
+        wait for 10 ns;
+        spi_ss <= '0';  -- habilita slave
 
-        -- Envia 16 bits (2 bytes)
-        for i in 15 downto 0 loop
-            spi_mosi <= packet(i);
-            spi_sck <= '0';
-            wait for spi_clk_period / 2;
-            spi_sck <= '1';
-            wait for spi_clk_period / 2;
+        -- Envia todos os bytes de teste
+        for i in test_bytes'range loop
+            for j in 7 downto 0 loop
+                spi_mosi <= test_bytes(i)(j);
+                spi_sck <= '0';
+                wait for spi_clk_period / 2;
+                spi_sck <= '1';
+                wait for spi_clk_period / 2;
+            end loop;
+
+            -- Aguarda o pulso de escrita do DUT
+            wait until rising_edge(clk);
+            if spi_mem_write = '1' then
+                assert spi_data_out = unsigned(test_bytes(i))
+                    report "Erro: byte recebido incorreto!" severity error;
+                assert spi_addr_bus = i
+                    report "Erro: endereço incorreto!" severity error;
+            end if;
         end loop;
 
-        spi_sck <= '0';
-        spi_ss  <= '1';  -- desabilita slave
-
-        wait for 1 us;
+        spi_ss <= '1';  -- desabilita slave
+        wait for 10 ns;
 
         report "Simulação concluída com sucesso." severity note;
         wait;
