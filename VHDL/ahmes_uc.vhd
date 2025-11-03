@@ -169,9 +169,7 @@ BEGIN
                                 PC        := PC + 2;
                                 CPU_STATE := BUSCA;
                             end if;
-                        
-                        -- ... (demais saltos condicionais são similares) ...
-                        
+                                                
                         when JZ =>
                             if (Z = '1') then
                                 ADDRESS_BUS <= PC + 1;
@@ -240,9 +238,8 @@ BEGIN
                     CPU_STATE := DECOD_ADD3;
 
                 when DECOD_ADD3 =>
-                    -- MUDANÇA LÓGICA: Ordem dos operandos corrigida para consistência
-                    OPER_A    <= AC;       -- Operando A é o acumulador
-                    OPER_B    <= DATA_IN;  -- Operando B é o da memória
+                    OPER_A    <= AC;      
+                    OPER_B    <= DATA_IN;
                     OPERACAO  <= ULA_ADD;
                     PC        := PC + 2; -- Incrementa PC em 2 para pular opcode e operando
                     CPU_STATE := DECOD_STORE;

@@ -8,8 +8,7 @@ ENTITY memoria IS
         data_in     		: IN  unsigned(7 downto 0);
         data_out    	: OUT unsigned(7 downto 0);
         mem_write   	: IN  std_logic;
-        clk         		: IN  std_logic;
-        rst         		: IN  std_logic
+        clk         		: IN  std_logic
     );
 END memoria;
 
@@ -18,16 +17,14 @@ ARCHITECTURE MEMO OF memoria IS
     signal data_array_sig : data_array_type; 
 
 BEGIN
-    process (rst, clk)
+    process (clk)
     begin
-        IF (rst = '1') THEN
-            data_array_sig <= (others => (others => '0'));
-        ELSIF (rising_edge(clk)) THEN
+        IF (rising_edge(clk)) THEN
             if mem_write = '1' then
                 data_array_sig(to_integer(address_bus)) <= data_in;
             end if; 
         END IF;     
     end process;
     
-    data_out <= (others => '0') when rst = '1' else data_array_sig(to_integer(address_bus));
+    data_out <= data_array_sig(to_integer(address_bus));
 END MEMO;

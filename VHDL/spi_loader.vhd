@@ -1,106 +1,87 @@
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY spi_loader IS
-    PORT (
-        clk           : IN  STD_LOGIC; 
-        spi_sck       : IN  STD_LOGIC;  
-        spi_ss        : IN  STD_LOGIC;  
-        spi_mosi      : IN  STD_LOGIC;
-        spi_data_out  : OUT unsigned(7 downto 0);
-        spi_addr_bus  : OUT unsigned(7 downto 0);
-        spi_mem_write : OUT STD_LOGIC
+entity spi_loader is
+    port (
+        clk          : in  std_logic;
+        spi_sck      : in  std_logic;
+        spi_ss       : in  std_logic;
+        spi_mosi     : in  std_logic;
+        spi_enable   : in  std_logic;
+        spi_data_out : out unsigned(7 downto 0);
+        spi_addr_bus : out unsigned(7 downto 0);
+        spi_mem_write: out std_logic
     );
-END ENTITY spi_loader;
+end entity spi_loader;
 
-ARCHITECTURE rtl OF spi_loader IS
+architecture rtl of spi_loader is
+    signal shift_reg   : unsigned(7 downto 0) := (others => '0');
+    signal bit_cnt     : unsigned(2 downto 0) := (others => '0');
+    signal addr_cnt    : unsigned(7 downto 0) := (others => '0');
+    signal data_valid  : std_logic := '0';
+    signal disable_spi : std_logic := '0';
 
-    SIGNAL spi_domain_shift_reg : unsigned(7 downto 0) := (others => '0');
-    SIGNAL spi_domain_bit_cnt   : unsigned(2 downto 0) := (others => '0');
-    SIGNAL addr_counter         : unsigned(7 downto 0) := (others => '0');
-    SIGNAL data_valid           : STD_LOGIC := '0';
-    SIGNAL disable_spi          : STD_LOGIC := '0'; 
+    signal sck_sync0, sck_sync1, sck_prev : std_logic := '0';
+    signal ss_sync0, ss_sync : std_logic := '0';
+begin
 
-    -- Sinais de sincronização do clock SPI
-    SIGNAL sck_sync_0, sck_sync_1 : STD_LOGIC := '0';
-    SIGNAL sck_prev               : STD_LOGIC := '0';
+    ss_sync_proc : process(clk)
+    begin
+        if rising_edge(clk) then
+            ss_sync0 <= spi_ss;
+            ss_sync  <= ss_sync0;
+        end if;
+    end process;
 
-    SIGNAL spi_ss_sync_p          : STD_LOGIC;
-    SIGNAL spi_ss_sync            : STD_LOGIC;
+    spi_capture_proc : process(clk)
+    begin
+        if rising_edge(clk) then
+            sck_sync0 <= spi_sck;
+            sck_sync1 <= sck_sync0;
 
-BEGIN
+            if sck_prev = '0' and sck_sync1 = '1' then
+                if spi_ss = '0' and disable_spi = '0' then
+                    shift_reg <= shift_reg(6 downto 0) & spi_mosi;
 
-    --------------------------------------------------------------------
-    -- Sincroniza o sinal SPI SS com o clock interno
-    --------------------------------------------------------------------
-    spi_ss_sync_proc : PROCESS(clk)
-    BEGIN
-        IF rising_edge(clk) THEN
-            spi_ss_sync_p <= spi_ss;
-            spi_ss_sync   <= spi_ss_sync_p;
-        END IF;
-    END PROCESS;
+                    if bit_cnt = "111" then
+                        data_valid <= '1';
+                        bit_cnt    <= (others => '0');
+                    else
+                        bit_cnt <= bit_cnt + 1;
+                    end if;
+                end if;
+            end if;
 
-    --------------------------------------------------------------------
-    -- Captura do SPI (clock do micro tratado como I/O normal)
-    --------------------------------------------------------------------
-    spi_capture_proc : PROCESS(clk)
-    BEGIN
-        IF rising_edge(clk) THEN
-            -- sincronização de 2 estágios do clock SPI
-            sck_sync_0 <= spi_sck;
-            sck_sync_1 <= sck_sync_0;
+            sck_prev <= sck_sync1;
 
-            -- detecta borda de subida do SPI
-            IF sck_prev = '0' AND sck_sync_1 = '1' THEN
-                IF spi_ss = '0' AND disable_spi = '0' THEN
-                    spi_domain_shift_reg <= spi_domain_shift_reg(6 downto 0) & spi_mosi;
+            if spi_ss = '1' then
+                bit_cnt    <= (others => '0');
+                data_valid <= '0';
+            end if;
+        end if;
+    end process;
 
-                    IF spi_domain_bit_cnt = "111" THEN
-                        data_valid         <= '1';
-                        spi_domain_bit_cnt <= (others => '0');
-                    ELSE
-                        spi_domain_bit_cnt <= spi_domain_bit_cnt + 1;
-                    END IF;
-                END IF;
-            END IF;
-
-            -- atualiza sck_prev
-            sck_prev <= sck_sync_1;
-
-            -- reset do contador se SPI não selecionado
-            IF spi_ss = '1' THEN
-                spi_domain_bit_cnt <= (others => '0');
-                data_valid         <= '0';
-            END IF;
-        END IF;
-    END PROCESS;
-
-    --------------------------------------------------------------------
-    -- Lógica de escrita na memória
-    --------------------------------------------------------------------
-    system_clock_proc : PROCESS(clk)
-    BEGIN
-        IF rising_edge(clk) THEN
+    system_proc : process(clk)
+    begin
+        if rising_edge(clk) then
             spi_mem_write <= '0';
 
-            IF spi_ss_sync = '1' THEN
-                addr_counter <= (others => '0');
-                disable_spi  <= '0';
-            ELSE
-                IF disable_spi = '1' THEN
+            if ss_sync = '1' then
+                addr_cnt   <= (others => '0');
+                disable_spi <= '0';
+            else
+                if disable_spi = '1' then
                     disable_spi <= '0';
-                ELSIF data_valid = '1' THEN
-                    spi_data_out  <= spi_domain_shift_reg;
-                    spi_addr_bus  <= addr_counter;
+                elsif data_valid = '1' then
+                    spi_data_out  <= shift_reg;
+                    spi_addr_bus  <= addr_cnt;
                     spi_mem_write <= '1';
-
-                    addr_counter  <= addr_counter + 1;
+                    addr_cnt      <= addr_cnt + 1;
                     disable_spi   <= '1';
-                END IF;
-            END IF;
-        END IF;
-    END PROCESS;
+                end if;
+            end if;
+        end if;
+    end process;
 
-END ARCHITECTURE rtl;
+end architecture rtl;
