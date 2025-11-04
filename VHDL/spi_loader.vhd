@@ -23,7 +23,6 @@ architecture rtl of spi_loader is
 
     signal byte_ready_sys_0 : std_logic := '0';
     signal byte_ready_sys_1 : std_logic := '0';
-    signal byte_ready_sys_2 : std_logic := '0';
     signal addr_cnt         : unsigned(7 downto 0) := (others => '0');
 begin
 
@@ -49,12 +48,11 @@ begin
         if rising_edge(clk) then
             byte_ready_sys_0 <= byte_ready_spi;
             byte_ready_sys_1 <= byte_ready_sys_0;
-            byte_ready_sys_2 <= byte_ready_sys_1;
 
             spi_mem_write <= '0';
 
             if spi_enable = '1' then
-                if byte_ready_sys_2 /= byte_ready_sys_1 then
+                if byte_ready_sys_1 /= byte_ready_sys_0 then
                     spi_data_out  <= spi_data_reg;
                     spi_addr_bus  <= addr_cnt;
                     spi_mem_write <= '1';
