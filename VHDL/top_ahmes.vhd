@@ -35,7 +35,7 @@ ARCHITECTURE structural OF top_ahmes IS
     signal spi_loader_addr_bus   : unsigned(7 DOWNTO 0);
     signal spi_loader_mem_write  : std_logic;
 
-    signal switch_enable : std_logic;
+    signal switch_enable, s_reset : std_logic;
 
 BEGIN
 
@@ -46,7 +46,7 @@ BEGIN
             data_out    => uc_data_to_mem,
             mem_write   => uc_mem_write,
             clk         => clk,
-            reset       => reset,
+            reset       => s_reset,
             btns        => btns,
             leds        => leds,
             ERROR       => ERROR,
@@ -99,7 +99,7 @@ BEGIN
 
 
     switch_enable <= btns(0);
-
+	s_reset <= reset or switch_enable;
     s_mem_write   <=   spi_loader_mem_write when switch_enable = '1' else uc_mem_write;
     s_address_bus <=   spi_loader_addr_bus when switch_enable = '1' else uc_address_bus;
     s_data_to_mem <= spi_loader_data_out when switch_enable = '1' else uc_data_to_mem;

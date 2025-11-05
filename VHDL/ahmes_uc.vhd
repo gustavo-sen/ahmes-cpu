@@ -1,13 +1,9 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.all;
-USE ieee.numeric_std.all; -- Biblioteca padrão, já estava correta
+USE ieee.numeric_std.all; 
 
 ENTITY ahmes_uc IS
     PORT (
-        -- ========================================================================
-        -- MUDANÇA PRINCIPAL: Todas as portas que representam números ou barramentos
-        -- foram trocadas de STD_LOGIC_VECTOR para unsigned.
-        -- ========================================================================
         address_bus : OUT unsigned(7 DOWNTO 0);
         data_in     : IN  unsigned(7 DOWNTO 0);
         data_out    : OUT unsigned(7 DOWNTO 0);
@@ -27,7 +23,6 @@ ENTITY ahmes_uc IS
 END ENTITY ahmes_uc;
 
 ARCHITECTURE cpu OF ahmes_uc IS
-    -- As constantes precisam ser convertidas para o tipo unsigned para comparação
     constant NOP : unsigned(7 DOWNTO 0) := "00000000";
     constant STA : unsigned(7 DOWNTO 0) := "00010000";
     constant LDA : unsigned(7 DOWNTO 0) := "00100000";
