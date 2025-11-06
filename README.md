@@ -60,8 +60,9 @@ ghdl -r tb_ahmes_uc --vcd=simulacao.vcd
 gtkwave simulacao.vcd
 
 ### Teste SPI
-ghdl -a spi_loader.vhd                                    
-ghdl -a tb_spi_loader.vhd
-ghdl -e tb_spi_loader
+ghdl --remove
+ghdl -a --std=93 spi_loader.vhd 
+ghdl -a --std=93 tb_spi_loader.vhd
+ghdl -e --std=93 tb_spi_loader
 ghdl -r tb_spi_loader --vcd=spi_loader.vcd --stop-time=3us
-gtkwave spi_loader.vcd  
+gtkwave spi_loader.vcd
