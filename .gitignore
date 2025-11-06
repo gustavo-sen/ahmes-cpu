@@ -7,3 +7,4 @@ VHDL/wave.vcd
 quartus
 *.bak
 
+*.vcd

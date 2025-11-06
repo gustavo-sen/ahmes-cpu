@@ -17,7 +17,7 @@ ENTITY top_ahmes IS
     );
 END ENTITY top_ahmes;
 
-ARCHITECTURE structural OF top_ahmes IS
+ARCHITECTURE top OF top_ahmes IS
 
     signal s_address_bus, uc_address_bus : unsigned(7 DOWNTO 0);
     signal s_data_to_mem, uc_data_to_mem : unsigned(7 DOWNTO 0);
@@ -31,11 +31,11 @@ ARCHITECTURE structural OF top_ahmes IS
     signal s_cin         : std_logic;
     signal s_n, s_z, s_c, s_b, s_v : std_logic;
 
-    signal spi_loader_data_out   : unsigned(7 DOWNTO 0);
-    signal spi_loader_addr_bus   : unsigned(7 DOWNTO 0);
-    signal spi_loader_mem_write  : std_logic;
+    signal spi_data_out   : unsigned(7 DOWNTO 0);
+    signal spi_addr_bus   : unsigned(7 DOWNTO 0);
+    signal spi_mem_write  : std_logic;
 
-    signal switch_enable, s_reset : std_logic;
+    signal programing_mode, s_reset : std_logic;
 
 BEGIN
 
@@ -85,25 +85,35 @@ BEGIN
             clk         => clk
         );
 
-    spi_loader_inst : entity work.spi_loader
+    spi_inst : entity work.spi
         PORT MAP (
             clk           => clk,
             spi_sck       => spi_sck, 
             spi_ss        => spi_ss,   
             spi_mosi      => spi_mosi,
-            spi_enable    => switch_enable,
-            spi_data_out  => spi_loader_data_out,
-            spi_addr_bus  => spi_loader_addr_bus,
-            spi_mem_write => spi_loader_mem_write
+            spi_enable    => programing_mode,
+            spi_data_out  => spi_data_out,
+            spi_addr_bus  => spi_addr_bus,
+            spi_mem_write => spi_mem_write
         );
 
+    proc_debounce: process(clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                programing_mode <= '0';
+                leds <= (others => '0');
+            elsif btns(0) = '1' then
+                programing_mode <= '1';
+                leds <= (others => '1');
+            end if;
+        end if;
+    end process;
 
-    switch_enable <= btns(0);
-	s_reset <= reset or switch_enable;
-    s_mem_write   <=   spi_loader_mem_write when switch_enable = '1' else uc_mem_write;
-    s_address_bus <=   spi_loader_addr_bus when switch_enable = '1' else uc_address_bus;
-    s_data_to_mem <= spi_loader_data_out when switch_enable = '1' else uc_data_to_mem;
+    s_mem_write   <=   spi_mem_write when programing_mode = '1' else uc_mem_write;
+    s_address_bus <=   spi_addr_bus  when programing_mode = '1' else uc_address_bus;
+    s_data_to_mem <=   spi_data_out  when programing_mode = '1' else uc_data_to_mem;
 
     Cout <= s_cin;
 
-END ARCHITECTURE structural;
+END ARCHITECTURE top;
