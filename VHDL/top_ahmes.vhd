@@ -86,7 +86,7 @@ BEGIN
             clk         => clk
         );
 
-    spi_inst : entity work.spi
+    spi_inst : entity work.spi_loader
         PORT MAP (
             clk           => clk,
             spi_sck       => spi_sck, 
