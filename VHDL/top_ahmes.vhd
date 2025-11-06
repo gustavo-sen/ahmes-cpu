@@ -36,7 +36,7 @@ ENTITY top_ahmes IS
 	signal spi_addr_bus   : unsigned(7 DOWNTO 0);
 	signal spi_mem_write  : std_logic;
 
-	signal programing_mode, s_reset : std_logic;
+	signal programing_mode : std_logic;
 	signal bus_leds, s_leds : unsigned(3 downto 0);
 
 	BEGIN
@@ -48,7 +48,7 @@ ENTITY top_ahmes IS
 		data_out    => uc_data_to_mem,
 		mem_write   => uc_mem_write,
 		clk         => clk,
-		reset       => s_reset,
+		reset       => reset,
 		btns        => btns,
 		leds        => bus_leds,
 		ERROR       => ERROR,
@@ -90,6 +90,7 @@ ENTITY top_ahmes IS
 	spi_inst : entity work.spi_loader
 	PORT MAP (
 		clk           => clk,
+		reset		  => reset,
 		spi_sck       => spi_sck, 
 		spi_ss        => spi_ss,   
 		spi_mosi      => spi_mosi,
@@ -118,5 +119,5 @@ ENTITY top_ahmes IS
 
     Cout <= s_cin;
     leds <= s_leds or bus_leds;
-    
+
 END ARCHITECTURE top;

@@ -4,7 +4,8 @@ use ieee.numeric_std.all;
 
 entity spi_loader is
     port (
-        clk           : in  std_logic;                     
+        clk           : in  std_logic;             
+        reset         : in  std_logic;        
         spi_sck       : in  std_logic;                     
         spi_ss        : in  std_logic;                     
         spi_mosi      : in  std_logic;                     
@@ -69,7 +70,7 @@ begin
                 end if;
             end if;
 
-            if spi_ss_sync_1 = '1' then
+            if spi_ss_sync_1 = '1' or reset = '1' then
                 addr_cnt <= (others => '0');
             end if;
         end if;
