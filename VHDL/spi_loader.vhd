@@ -63,7 +63,9 @@ begin
                     spi_data_out  <= spi_data_reg;
                     spi_addr_bus  <= addr_cnt;
                     spi_mem_write <= '1';
-                    addr_cnt      <= addr_cnt + 1;
+                    if addr_cnt < "11111111" then
+                        addr_cnt <= addr_cnt + 1;
+                    end if;
                 end if;
             end if;
 
