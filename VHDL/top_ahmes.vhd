@@ -10,11 +10,11 @@ ENTITY top_ahmes IS
         btns        : IN  unsigned(3 DOWNTO 0);
         spi_sck     : IN  STD_LOGIC;
         spi_ss      : IN  STD_LOGIC;
-        spi_mosi    : IN  STD_LOGIC
+        spi_mosi    : IN  STD_LOGIC;
         
         leds        : OUT unsigned(3 DOWNTO 0);
         Cout        : OUT STD_LOGIC;
-        ERROR       : OUT STD_LOGIC;
+        ERROR       : OUT STD_LOGIC
     );
 END ENTITY top_ahmes;
 
