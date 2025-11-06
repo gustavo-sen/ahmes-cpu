@@ -73,17 +73,17 @@ begin
         spi_ss <= '1';
         spi_enable <= '0';
         reset <= '1';
-        wait for 100 ns;  -- mantém reset ativo
-        reset <= '0';     -- libera reset
-        wait for 50 ns;
-        spi_enable <= '1'; -- habilita SPI
+        wait for 10 ns;  
+        reset <= '0';     
+        wait for 10 ns;
+        spi_enable <= '1';
 
         ----------------------------------------------------------------
         -- Envio de bytes SPI
         ----------------------------------------------------------------
-        spi_ss <= '0';  -- habilita slave
-
+        
         for i in test_bytes'range loop
+            spi_ss <= '0';
             for j in 7 downto 0 loop
                 spi_mosi <= test_bytes(i)(j);
                 spi_sck <= '0';
@@ -91,7 +91,7 @@ begin
                 spi_sck <= '1';
                 wait for spi_clk_period / 2;
             end loop;
-
+            spi_ss <= '1';
             -- Espera o pulso de escrita do DUT
             wait until spi_mem_write = '1';
             assert spi_data_out = unsigned(test_bytes(i))

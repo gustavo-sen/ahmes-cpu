@@ -70,7 +70,7 @@ begin
                 end if;
             end if;
 
-            if spi_ss_sync_1 = '1' or reset = '1' then
+            if reset = '1' then
                 addr_cnt <= (others => '0');
             end if;
         end if;
