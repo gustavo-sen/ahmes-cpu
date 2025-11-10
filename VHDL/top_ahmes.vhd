@@ -39,6 +39,8 @@ ENTITY top_ahmes IS
 	signal programing_mode : std_logic;
 	signal bus_leds, s_leds : unsigned(3 downto 0);
 
+	signal s_reset: std_logic;
+
 	BEGIN
 
 	uc_inst : entity work.ahmes_uc
@@ -103,12 +105,12 @@ ENTITY top_ahmes IS
 	proc_debounce: process(clk)
 	begin
 	if rising_edge(clk) then
-		if reset = '1' then
-			 programing_mode <= '0';
-             s_leds <= (others => '0');
-		elsif btns(0) = '1' then
-			 programing_mode <= '1';
+		if btns(0) = '1' then
+			programing_mode <= '1';
              s_leds <= (others => '1');
+			else
+				programing_mode <= '0';
+				s_leds <= (others => '0');
 		end if;
 	end if;
 	end process;
@@ -119,5 +121,9 @@ ENTITY top_ahmes IS
 
     Cout <= s_cin;
     leds <= s_leds or bus_leds;
+	--leds(1) <= btns(0);
+	
+	-- reset when programming or reset enable
+	s_reset <= reset or programing_mode;
 
 END ARCHITECTURE top;
